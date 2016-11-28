@@ -1,6 +1,8 @@
 #-*- coding: utf8 -*-
 import csv, random, math, operator
 
+from pylab import plot,show
+
 def carregarDados(arquivo,arquivoTeste,listaTreino=[],listaTeste=[]):
 	
 	with open(arquivo,'rb') as arquivoCSV:
@@ -70,5 +72,17 @@ def knn():
 		resultado = classificar(vizinhos)
 		previsoes.append(resultado)
 		print ' ID = ' + repr(listaTeste[x][-1]) + ' ----- classificação = ' + repr(resultado)
+
+
+		#grafico
+		if resultado == 'Iris-setosa':
+			plot(listaTeste[x][0],listaTeste[x][1], 'or')
+		elif resultado == 'Iris-versicolor':
+			plot(listaTeste[x][0],listaTeste[x][1], 'og')
+		else:
+			plot(listaTeste[x][0],listaTeste[x][1], 'ob')
+
+	show()
+
 
 knn()
