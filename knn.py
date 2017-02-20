@@ -1,88 +1,109 @@
-#-*- coding: utf8 -*-
-import csv, random, math, operator
+import csv
+import random
+import math
+import operator
 
-from pylab import plot,show
 
-def carregarDados(arquivo,arquivoTeste,listaTreino=[],listaTeste=[]):
-	
-	with open(arquivo,'rb') as arquivoCSV:
-		linhas = csv.reader(arquivoCSV)
-		dados = list(linhas)
-		for x in range(len(dados)-1):
-			for y in range(4):
-				dados[x][y] = float(dados[x][y])
-			listaTreino.append(dados[x])
-
-	with open(arquivoTeste,'rb') as arquivoCSV2:
-		linhas2 = csv.reader(arquivoCSV2)
-		dados2 = list(linhas2)
-		for x in range(len(dados2)-1):
-			for y in range(4):
-				dados2[x][y] = float(dados2[x][y])
-			listaTeste.append(dados2[x])
-
-def distanciaEuclidiana(instancia1, instancia2, comp):
-	distancia = 0
-	for x in range(comp):
-		distancia += pow((instancia1[x]-instancia2[x]),2)
-	return math.sqrt(distancia)
-
-def selecionaVizinhos(listaTreino, instanciaTeste, k):
-	distancias = []
-	comp = len(instanciaTeste)-1
-	for x in range(len(listaTreino)):
-		dist = distanciaEuclidiana(instanciaTeste,listaTreino[x],comp)
-		distancias.append((listaTreino[x],dist))
-	distancias.sort(key=operator.itemgetter(1))
-	vizinhos = []
+#graf==========
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
+import numpy as np
+#==============
+ 
+def loadDataset(filename, split, trainingSet=[] , testSet=[]):
+	with open(filename, 'rb') as csvfile:
+	    lines = csv.reader(csvfile)
+	    dataset = list(lines)
+	    for x in range(len(dataset)-1):
+	        for y in range(4):
+	            dataset[x][y] = float(dataset[x][y])
+	        if random.random() < split:
+	            trainingSet.append(dataset[x])
+	        else:
+	            testSet.append(dataset[x])
+ 
+ 
+def euclideanDistance(instance1, instance2, length):
+	distance = 0
+	for x in range(length):
+		distance += pow((instance1[x] - instance2[x]), 2)
+	return math.sqrt(distance)
+ 
+def getNeighbors(trainingSet, testInstance, k):
+	distances = []
+	length = len(testInstance)-1
+	for x in range(len(trainingSet)):
+		dist = euclideanDistance(testInstance, trainingSet[x], length)
+		distances.append((trainingSet[x], dist))
+	distances.sort(key=operator.itemgetter(1))
+	neighbors = []
 	for x in range(k):
-		vizinhos.append(distancias[x][0])
-	return vizinhos
-
-def classificar(vizinhos):
-	votos = {}
-	for x in range(len(vizinhos)):
-		resultado = vizinhos[x][-1]
-		if resultado in votos:
-			votos[resultado] += 1
+		neighbors.append(distances[x][0])
+	return neighbors
+ 
+def getResponse(neighbors):
+	classVotes = {}
+	for x in range(len(neighbors)):
+		response = neighbors[x][-1]
+		if response in classVotes:
+			classVotes[response] += 1
 		else:
-			votos[resultado] = 1
-	votosOrdenados = sorted(votos.iteritems(),key=operator.itemgetter(1),reverse=True)
-	return votosOrdenados[0][0]
-
-def calcPrecisao(listaTeste,previsoes):
-	correto = 0
-	for x in range(len(listaTeste)):
-		if listaTeste[x][-1] == previsoes[x]:
-			correto += 1
-	return (correto/float(len(listaTeste))) * 100.0
-
-def knn():
-	listaTreino = []
-	listaTeste = []
-	split = 0.70
-	carregarDados('iris.data','iris-teste.data',listaTreino,listaTeste)
-	print 'casos de treino: ' + repr(len(listaTreino))
-	print 'casos de teste: ' + repr(len(listaTeste))
-	print '\n resultados: \n'
-	previsoes = []
+			classVotes[response] = 1
+	sortedVotes = sorted(classVotes.iteritems(), key=operator.itemgetter(1), reverse=True)
+	return sortedVotes[0][0]
+ 
+def getAccuracy(testSet, predictions):
+	correct = 0
+	for x in range(len(testSet)):
+		if testSet[x][-1] == predictions[x]:
+			correct += 1
+	return (correct/float(len(testSet))) * 100.0
+	
+def main():
+	# prepare data
+	trainingSet=[]
+	testSet=[]
+	split = 0.67
+	loadDataset('iris.data', split, trainingSet, testSet)
+	print 'Train set: ' + repr(len(trainingSet))
+	print 'Test set: ' + repr(len(testSet))
+	# generate predictions
+	predictions=[]
 	k = 3
-	for x in range(len(listaTeste)):
-		vizinhos = selecionaVizinhos(listaTreino,listaTeste[x],k)
-		resultado = classificar(vizinhos)
-		previsoes.append(resultado)
-		print ' ID = ' + repr(listaTeste[x][-1]) + ' ----- classificação = ' + repr(resultado)
+	for x in range(len(testSet)):
+		neighbors = getNeighbors(trainingSet, testSet[x], k)
+		result = getResponse(neighbors)
+		predictions.append(result)
+		print('> predicted=' + repr(result) + ', actual=' + repr(testSet[x][-1]))
+	accuracy = getAccuracy(testSet, predictions)
+	print('Accuracy: ' + repr(accuracy) + '%')
 
 
-		#grafico
-		if resultado == 'Iris-setosa':
-			plot(listaTeste[x][0],listaTeste[x][1], 'or')
-		elif resultado == 'Iris-versicolor':
-			plot(listaTeste[x][0],listaTeste[x][1], 'og')
+	#graf============================================
+	fig = plt.figure()
+	ax = fig.add_subplot(111, projection='3d')
+
+	index = 0
+	for item in testSet:
+
+		xs = item[0]
+		ys = item[1]
+		zs = item[2]
+
+		if predictions[index] == 'Iris-virginica':
+			ax.scatter(xs, ys, zs, c='r', marker='o')
+		elif predictions[index] == 'Iris-setosa':
+			ax.scatter(xs, ys, zs, c='b', marker='^')
 		else:
-			plot(listaTeste[x][0],listaTeste[x][1], 'ob')
+			ax.scatter(xs, ys, zs, c='g', marker='s')
 
-	show()
+		index += 1
+	
+	ax.set_xlabel('X')
+	ax.set_ylabel('Y')
+	ax.set_zlabel('Z')
 
-
-knn()
+	plt.show()
+	#================================================
+	
+main()
