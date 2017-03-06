@@ -76,7 +76,7 @@ def main():
 		predictions.append(result)
 		print('> predicted=' + repr(result) + ', actual=' + repr(testSet[x][-1]))
 	accuracy = getAccuracy(testSet, predictions)
-	print('Accuracy: ' + repr(accuracy) + '%')
+	print('Accuracy: %.2f' %(accuracy)+'%')
 
 
 	#graf============================================
@@ -87,7 +87,7 @@ def main():
 	def onpick3(event):
 		ind = event.ind
 		artist = event.artist
-		#print('onpick3 scatter:',artist.get_label(),ind, np.take(x, ind), np.take(y, ind),np.take(z, ind))
+		artist.set_visible(True)
 		print('onpick3 scatter:',artist.get_label())
 
 	#col = ax.scatter(picker=True)
@@ -102,6 +102,8 @@ def main():
 		x = item[0]
 		y = item[1]
 		z = item[2]
+
+		#ax.scatter([item[0]], [item[1]], 'o', ms=12, alpha=0.4,color='yellow', visible=False)
 
 		if predictions[index] == 'Iris-virginica':
 			ax.scatter(x, y, z, c='r', marker='o',picker=True,label = item[0:5])
