@@ -83,19 +83,32 @@ def main():
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')
 
+	# picking on a scatter plot (matplotlib.collections.RegularPolyCollection)
+	def onpick3(event):
+		ind = event.ind
+		artist = event.artist
+		#print('onpick3 scatter:',artist.get_label(),ind, np.take(x, ind), np.take(y, ind),np.take(z, ind))
+		print('onpick3 scatter:',artist.get_label())
+
+	#col = ax.scatter(picker=True)
+	#fig.savefig('pscoll.eps')
+	#fig.canvas.mpl_connect('pick_event', onpick3)
+
 	index = 0
 	for item in testSet:
 
-		xs = item[0]
-		ys = item[1]
-		zs = item[2]
+		fig.canvas.mpl_connect('pick_event', onpick3)
+
+		x = item[0]
+		y = item[1]
+		z = item[2]
 
 		if predictions[index] == 'Iris-virginica':
-			ax.scatter(xs, ys, zs, c='r', marker='o')
+			ax.scatter(x, y, z, c='r', marker='o',picker=True,label = item[0:5])
 		elif predictions[index] == 'Iris-setosa':
-			ax.scatter(xs, ys, zs, c='b', marker='^')
+			ax.scatter(x, y, z, c='b', marker='o',picker=True,label = item[0:5])
 		else:
-			ax.scatter(xs, ys, zs, c='g', marker='s')
+			ax.scatter(x, y, z, c='g', marker='o',picker=True,label = item[0:5])
 
 		index += 1
 	
@@ -105,5 +118,5 @@ def main():
 
 	plt.show()
 	#================================================
-	
+
 main()
